@@ -87,6 +87,19 @@ const PopupContent = styled.div`
   border-radius: 8px;
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
+const OrderButton = styled.button`
+  padding: 5px 10px;
+  background-color: #ccc;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+`;
+
 interface Selections {
   webPage: boolean;
   seoCampaign: boolean;
@@ -118,6 +131,34 @@ function BudgetScreen(): JSX.Element {
     seoCampaign: false,
     adCampaign: false,
   });
+
+  const [sortedBudgetList, setSortedBudgetList] = useState<Budget[]>([]);
+  const [isSortedByAlphabet, setIsSortedByAlphabet] = useState(false);
+  const [isSortedByDate, setIsSortedByDate] = useState(false);
+
+  const handleSortAlphabetically = () => {
+    const sortedList = [...budgetList].sort((a, b) =>
+      a.budgetName.localeCompare(b.budgetName)
+    );
+    setSortedBudgetList(sortedList);
+    setIsSortedByAlphabet(true);
+    setIsSortedByDate(false);
+  };
+
+  const handleSortByDate = () => {
+    const sortedList = [...budgetList].sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    setSortedBudgetList(sortedList);
+    setIsSortedByAlphabet(false);
+    setIsSortedByDate(true);
+  };
+
+  const handleResetOrder = () => {
+    setSortedBudgetList([]);
+    setIsSortedByAlphabet(false);
+    setIsSortedByDate(false);
+  };
 
   const [webPageData, setWebPageData] = useState<WebPageData>({
     numPages: 1,
@@ -318,19 +359,45 @@ function BudgetScreen(): JSX.Element {
       </LeftColumn>
 
       <RightColumn>
+      <ButtonContainer>
+          <OrderButton onClick={handleSortAlphabetically}>
+            Ordenar alfabèticament
+          </OrderButton>
+          <OrderButton onClick={handleSortByDate}>
+            Ordenar per data
+          </OrderButton>
+          {isSortedByAlphabet || isSortedByDate ? (
+            <OrderButton onClick={handleResetOrder}>
+              Reinicialitzar ordre
+            </OrderButton>
+          ) : null}
+        </ButtonContainer>
       <BudgetList>
         <h2>Llistat de Pressupostos</h2>
-        {budgetList.map((budget, index) => (
-          <div key={index}>
-            <p>Nom de pressupost: {budget.budgetName}</p>
-            <p>Nom del client: {budget.clientName}</p>
-            <p>Servei seleccionat: {budget.service}</p>
-            <p>Pressupost total: {budget.totalBudget} €</p>
-            <p>Data: {budget.date}</p>
-            <hr />
-          </div>
-        ))}
-      </BudgetList>
+        {isSortedByAlphabet || isSortedByDate ? (
+            sortedBudgetList.map((budget, index) => (
+              <div key={index}>
+                <p>Nom de pressupost: {budget.budgetName}</p>
+                <p>Nom del client: {budget.clientName}</p>
+                <p>Servei seleccionat: {budget.service}</p>
+                <p>Pressupost total: {budget.totalBudget} €</p>
+                <p>Data: {budget.date}</p>
+                <hr />
+              </div>
+            ))
+          ) : (
+            budgetList.map((budget, index) => (
+              <div key={index}>
+                <p>Nom de pressupost: {budget.budgetName}</p>
+                <p>Nom del client: {budget.clientName}</p>
+                <p>Servei seleccionat: {budget.service}</p>
+                <p>Pressupost total: {budget.totalBudget} €</p>
+                <p>Data: {budget.date}</p>
+                <hr />
+              </div>
+            ))
+          )}
+        </BudgetList>
       </RightColumn>
     </Container>
   );
