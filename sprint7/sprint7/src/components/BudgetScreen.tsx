@@ -135,7 +135,9 @@ function BudgetScreen(): JSX.Element {
   const [sortedBudgetList, setSortedBudgetList] = useState<Budget[]>([]);
   const [isSortedByAlphabet, setIsSortedByAlphabet] = useState(false);
   const [isSortedByDate, setIsSortedByDate] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
+  // ORDEN ALFABÉTICO
   const handleSortAlphabetically = () => {
     const sortedList = [...budgetList].sort((a, b) =>
       a.budgetName.localeCompare(b.budgetName)
@@ -145,6 +147,8 @@ function BudgetScreen(): JSX.Element {
     setIsSortedByDate(false);
   };
 
+
+  // ORDEN POR FECHA
   const handleSortByDate = () => {
     const sortedList = [...budgetList].sort((a, b) =>
       new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -154,6 +158,7 @@ function BudgetScreen(): JSX.Element {
     setIsSortedByDate(true);
   };
 
+  // RESETEAR ORDEN
   const handleResetOrder = () => {
     setSortedBudgetList([]);
     setIsSortedByAlphabet(false);
@@ -165,26 +170,26 @@ function BudgetScreen(): JSX.Element {
     numLanguages: 1,
   });
 
+  // Carregar les dades emmagatzemades al localStorage
   useEffect(() => {
-    // Carregar les dades emmagatzemades al localStorage
     const storedSelections = localStorage.getItem('selections');
     const storedWebPageData = localStorage.getItem('webPageData');
 
     if (storedSelections) {
       setSelections(JSON.parse(storedSelections));
     }
-
     if (storedWebPageData) {
       setWebPageData(JSON.parse(storedWebPageData));
     }
   }, []);
 
+  // Guardar les dades al localStorage quan canviïn
   useEffect(() => {
-    // Guardar les dades al localStorage quan canviïn
     localStorage.setItem('selections', JSON.stringify(selections));
     localStorage.setItem('webPageData', JSON.stringify(webPageData));
   }, [selections, webPageData]);
 
+  // CAMBIO CASILLA SELECCIÓN
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, checked } = event.target;
     setSelections((prevSelections) => ({
@@ -193,6 +198,7 @@ function BudgetScreen(): JSX.Element {
     }));
   };
 
+  // CAMBIO DATOS WEB
   const handleWebPageDataChange = (name: keyof WebPageData, value: number): void => {
     setWebPageData((prevWebPageData) => ({
       ...prevWebPageData,
@@ -200,6 +206,7 @@ function BudgetScreen(): JSX.Element {
     }));
   };
 
+  // CÁLCULO PRESUPUESTO TOTAL
   const totalBudget: number = Object.keys(selections).reduce((total, key) => {
     if (selections[key as keyof Selections]) {
       if (key === 'webPage') {
@@ -212,6 +219,7 @@ function BudgetScreen(): JSX.Element {
     return total;
   }, 0);
 
+  // FUNCIÓN AYUDA
   const [webPageHelpVisible, setWebPageHelpVisible] = useState(false);
   const [languageHelpVisible, setLanguageHelpVisible] = useState(false);
 
@@ -227,6 +235,7 @@ function BudgetScreen(): JSX.Element {
   const [clientName, setClientName] = useState('');
   const [budgetList, setBudgetList] = useState<Budget[]>([]);
 
+  // AÑADIR PRESUPUESTO LISTA
   const addBudgetToList = () => {
     const budget: Budget = {
       budgetName,
@@ -241,6 +250,7 @@ function BudgetScreen(): JSX.Element {
     setClientName('');
   };
 
+  // DESCRIPCIÓN SERVICIO
   const getServiceDescription = (): string => {
     let serviceDescription = '';
     if (selections.webPage) {
@@ -372,10 +382,20 @@ function BudgetScreen(): JSX.Element {
             </OrderButton>
           ) : null}
         </ButtonContainer>
+        <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Cercar pressupostos"
+      />
       <BudgetList>
         <h2>Llistat de Pressupostos</h2>
         {isSortedByAlphabet || isSortedByDate ? (
-            sortedBudgetList.map((budget, index) => (
+          sortedBudgetList
+            .filter((budget) =>
+              budget.budgetName.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            .map((budget, index) => (
               <div key={index}>
                 <p>Nom de pressupost: {budget.budgetName}</p>
                 <p>Nom del client: {budget.clientName}</p>
@@ -386,7 +406,11 @@ function BudgetScreen(): JSX.Element {
               </div>
             ))
           ) : (
-            budgetList.map((budget, index) => (
+            budgetList
+            .filter((budget) =>
+              budget.budgetName.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            .map((budget, index) => (
               <div key={index}>
                 <p>Nom de pressupost: {budget.budgetName}</p>
                 <p>Nom del client: {budget.clientName}</p>
