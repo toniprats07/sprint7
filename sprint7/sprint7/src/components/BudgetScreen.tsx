@@ -137,6 +137,10 @@ function BudgetScreen(): JSX.Element {
   const [isSortedByDate, setIsSortedByDate] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [budgetName, setBudgetName] = useState('');
+  const [clientName, setClientName] = useState('');
+  const [budgetList, setBudgetList] = useState<Budget[]>([]);
+
   // ORDEN ALFABÉTICO
   const handleSortAlphabetically = () => {
     const sortedList = [...budgetList].sort((a, b) =>
@@ -174,6 +178,7 @@ function BudgetScreen(): JSX.Element {
   useEffect(() => {
     const storedSelections = localStorage.getItem('selections');
     const storedWebPageData = localStorage.getItem('webPageData');
+    const storedBudgetList = localStorage.getItem('budgetList');
 
     if (storedSelections) {
       setSelections(JSON.parse(storedSelections));
@@ -181,13 +186,17 @@ function BudgetScreen(): JSX.Element {
     if (storedWebPageData) {
       setWebPageData(JSON.parse(storedWebPageData));
     }
+    if (storedBudgetList) {
+      setBudgetList(JSON.parse(storedBudgetList));
+    }
   }, []);
 
   // Guardar les dades al localStorage quan canviïn
   useEffect(() => {
     localStorage.setItem('selections', JSON.stringify(selections));
     localStorage.setItem('webPageData', JSON.stringify(webPageData));
-  }, [selections, webPageData]);
+    localStorage.setItem('budgetList', JSON.stringify(budgetList));
+  }, [selections, webPageData, budgetList]);
 
   // CAMBIO CASILLA SELECCIÓN
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -231,20 +240,16 @@ function BudgetScreen(): JSX.Element {
     setLanguageHelpVisible(!languageHelpVisible);
   };
 
-  const [budgetName, setBudgetName] = useState('');
-  const [clientName, setClientName] = useState('');
-  const [budgetList, setBudgetList] = useState<Budget[]>([]);
-
   // AÑADIR PRESUPUESTO LISTA
   const addBudgetToList = () => {
-    const budget: Budget = {
+    const newBudget: Budget = {
       budgetName,
       clientName,
       service: getServiceDescription(),
       totalBudget,
       date: new Date().toString(),
     };
-    setBudgetList((prevBudgetList) => [...prevBudgetList, budget]);
+    setBudgetList([...budgetList, newBudget]);
     // Reset input values
     setBudgetName('');
     setClientName('');
