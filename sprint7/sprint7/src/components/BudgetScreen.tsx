@@ -2,23 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 import QuantityInput from './QuantityInput';
-
-interface Selections {
-  webPage: boolean;
-  seoCampaign: boolean;
-  adCampaign: boolean;
-}
-
-interface WebPageData {
-  numPages: number;
-  numLanguages: number;
-}
-
-const prices: Record<keyof Selections, number> = {
-  webPage: 500,
-  seoCampaign: 300,
-  adCampaign: 200,
-};
+import HelpIcon from './HelpIcon';
 
 const Container = styled.div`
   margin: 0 auto;
@@ -39,8 +23,8 @@ const CheckboxLabel = styled.label`
 `;
 
 const InputLabel = styled.label`
-  display: block;
-  margin-bottom: 5px;
+  display: felx;
+  margin: 5px;
 `;
 
 const InputContainer = styled.div`
@@ -57,64 +41,118 @@ const Budget = styled.h2`
   margin-top: 20px;
 `;
 
+const HelpButton = styled.button`
+  background-color: transparent;
+  border: none;
+  color: grey;
+  cursor: pointer;
+`;
+
+const PopupOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const PopupContent = styled.div`
+  border: 2px solid black;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+`;
+
+interface Selections {
+  webPage: boolean;
+  seoCampaign: boolean;
+  adCampaign: boolean;
+}
+
+interface WebPageData {
+  numPages: number;
+  numLanguages: number;
+}
+
+const prices: Record<keyof Selections, number> = {
+  webPage: 500,
+  seoCampaign: 300,
+  adCampaign: 200,
+};
+
 function BudgetScreen(): JSX.Element {
-    const [selections, setSelections] = useState<Selections>({
-        webPage: false,
-        seoCampaign: false,
-        adCampaign: false,
-      });
-    
-      const [webPageData, setWebPageData] = useState<WebPageData>({
-        numPages: 1,
-        numLanguages: 1,
-      });
-    
-      useEffect(() => {
-        // Carregar les dades emmagatzemades al localStorage
-        const storedSelections = localStorage.getItem('selections');
-        const storedWebPageData = localStorage.getItem('webPageData');
-    
-        if (storedSelections) {
-          setSelections(JSON.parse(storedSelections));
-        }
-    
-        if (storedWebPageData) {
-          setWebPageData(JSON.parse(storedWebPageData));
-        }
-      }, []);
-    
-      useEffect(() => {
-        // Guardar les dades al localStorage quan canviïn
-        localStorage.setItem('selections', JSON.stringify(selections));
-        localStorage.setItem('webPageData', JSON.stringify(webPageData));
-      }, [selections, webPageData]);
-    
-      const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-        const { name, checked } = event.target;
-        setSelections((prevSelections) => ({
-          ...prevSelections,
-          [name]: checked,
-        }));
-      };
-    
-      const handleWebPageDataChange = (name: keyof WebPageData, value: number): void => {
-        setWebPageData((prevWebPageData) => ({
-          ...prevWebPageData,
-          [name]: value,
-        }));
-      };
-    
-      const totalBudget: number = Object.keys(selections).reduce((total, key) => {
-        if (selections[key as keyof Selections]) {
-          if (key === 'webPage') {
-            const { numPages, numLanguages } = webPageData;
-            const webPageCost = numPages * numLanguages * 30;
-            return total + prices[key as keyof Selections] + webPageCost;
-          }
-          return total + prices[key as keyof Selections];
-        }
-        return total;
-      }, 0);
+  const [selections, setSelections] = useState<Selections>({
+    webPage: false,
+    seoCampaign: false,
+    adCampaign: false,
+  });
+
+  const [webPageData, setWebPageData] = useState<WebPageData>({
+    numPages: 1,
+    numLanguages: 1,
+  });
+
+  useEffect(() => {
+    // Carregar les dades emmagatzemades al localStorage
+    const storedSelections = localStorage.getItem('selections');
+    const storedWebPageData = localStorage.getItem('webPageData');
+
+    if (storedSelections) {
+      setSelections(JSON.parse(storedSelections));
+    }
+
+    if (storedWebPageData) {
+      setWebPageData(JSON.parse(storedWebPageData));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Guardar les dades al localStorage quan canviïn
+    localStorage.setItem('selections', JSON.stringify(selections));
+    localStorage.setItem('webPageData', JSON.stringify(webPageData));
+  }, [selections, webPageData]);
+
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const { name, checked } = event.target;
+    setSelections((prevSelections) => ({
+      ...prevSelections,
+      [name]: checked,
+    }));
+  };
+
+  const handleWebPageDataChange = (name: keyof WebPageData, value: number): void => {
+    setWebPageData((prevWebPageData) => ({
+      ...prevWebPageData,
+      [name]: value,
+    }));
+  };
+
+  const totalBudget: number = Object.keys(selections).reduce((total, key) => {
+    if (selections[key as keyof Selections]) {
+      if (key === 'webPage') {
+        const { numPages, numLanguages } = webPageData;
+        const webPageCost = numPages * numLanguages * 30;
+        return total + prices[key as keyof Selections] + webPageCost;
+      }
+      return total + prices[key as keyof Selections];
+    }
+    return total;
+  }, 0);
+
+  const [webPageHelpVisible, setWebPageHelpVisible] = useState(false);
+  const [languageHelpVisible, setLanguageHelpVisible] = useState(false);
+
+  const toggleWebPageHelp = () => {
+    setWebPageHelpVisible(!webPageHelpVisible);
+  };
+
+  const toggleLanguageHelp = () => {
+    setLanguageHelpVisible(!languageHelpVisible);
+  };
 
   return (
     <Container>
@@ -132,7 +170,7 @@ function BudgetScreen(): JSX.Element {
         <div>
           <InputContainer>
             <InputLabel>
-              Nombre de pàgines:
+              Nombre de pàgines 
               <QuantityInput
                 value={webPageData.numPages}
                 onIncrement={() =>
@@ -143,9 +181,19 @@ function BudgetScreen(): JSX.Element {
                 }
                 onChange={(value) => handleWebPageDataChange('numPages', value)}
               />
+              <HelpButton onClick={toggleWebPageHelp}><HelpIcon/></HelpButton>
+              {webPageHelpVisible && (
+              <PopupOverlay onClick={toggleWebPageHelp}>
+                <PopupContent>
+                  <p>En aquest apartat has d'indicar el número de pàgines que vols en el teu projecte</p>
+                </PopupContent>
+              </PopupOverlay>
+            )}
             </InputLabel>
+            
+
             <InputLabel>
-              Nombre d'idiomes:
+              Nombre d'idiomes
               <QuantityInput
                 value={webPageData.numLanguages}
                 onIncrement={() =>
@@ -156,7 +204,15 @@ function BudgetScreen(): JSX.Element {
                 }
                 onChange={(value) => handleWebPageDataChange('numLanguages', value)}
               />
+              <HelpButton onClick={toggleLanguageHelp}><HelpIcon/></HelpButton>
             </InputLabel>
+            {languageHelpVisible && (
+              <PopupOverlay onClick={toggleLanguageHelp}>
+                <PopupContent>
+                  <p>En aquest apartat has d'indicar el número d'idiomes que vols en el teu projecte</p>
+                </PopupContent>
+              </PopupOverlay>
+            )}
           </InputContainer>
         </div>
       )}
