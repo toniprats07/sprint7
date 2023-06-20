@@ -5,11 +5,26 @@ import QuantityInput from './QuantityInput';
 import HelpIcon from './HelpIcon';
 
 const Container = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin: 0 auto;
   padding: 20px;
   font-family: Arial, sans-serif;
   background-color: #f5f5f5;
   border-radius: 8px;
+  gap: 20px;
+`;
+
+const LeftColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+`;
+
+const RightColumn = styled.div`
+  flex: 1;
 `;
 
 const Title = styled.h1`
@@ -39,6 +54,11 @@ const Budget = styled.h2`
   font-size: 18px;
   font-weight: bold;
   margin-top: 20px;
+`;
+
+const BudgetList = styled.div`
+  flex: 1;
+  margin-left: 40px;
 `;
 
 const HelpButton = styled.button`
@@ -76,6 +96,14 @@ interface Selections {
 interface WebPageData {
   numPages: number;
   numLanguages: number;
+}
+
+interface Budget {
+  budgetName: string;
+  clientName: string;
+  service: string;
+  totalBudget: number;
+  date: string;
 }
 
 const prices: Record<keyof Selections, number> = {
@@ -154,8 +182,42 @@ function BudgetScreen(): JSX.Element {
     setLanguageHelpVisible(!languageHelpVisible);
   };
 
+  const [budgetName, setBudgetName] = useState('');
+  const [clientName, setClientName] = useState('');
+  const [budgetList, setBudgetList] = useState<Budget[]>([]);
+
+  const addBudgetToList = () => {
+    const budget: Budget = {
+      budgetName,
+      clientName,
+      service: getServiceDescription(),
+      totalBudget,
+      date: new Date().toString(),
+    };
+    setBudgetList((prevBudgetList) => [...prevBudgetList, budget]);
+    // Reset input values
+    setBudgetName('');
+    setClientName('');
+  };
+
+  const getServiceDescription = (): string => {
+    let serviceDescription = '';
+    if (selections.webPage) {
+      const { numPages, numLanguages } = webPageData;
+      serviceDescription += `Pàgina web (${numPages} pàgines, ${numLanguages} idiomes) `;
+    }
+    if (selections.seoCampaign) {
+      serviceDescription += 'Campanya SEO ';
+    }
+    if (selections.adCampaign) {
+      serviceDescription += 'Campanya de Google Ads ';
+    }
+    return serviceDescription.trim();
+  };
+
   return (
     <Container>
+      <LeftColumn>
       <Title>Pressupost</Title>
       <CheckboxLabel>
         <input
@@ -170,7 +232,7 @@ function BudgetScreen(): JSX.Element {
         <div>
           <InputContainer>
             <InputLabel>
-              Nombre de pàgines 
+              Nombre de pàgines
               <QuantityInput
                 value={webPageData.numPages}
                 onIncrement={() =>
@@ -181,16 +243,18 @@ function BudgetScreen(): JSX.Element {
                 }
                 onChange={(value) => handleWebPageDataChange('numPages', value)}
               />
-              <HelpButton onClick={toggleWebPageHelp}><HelpIcon/></HelpButton>
+              <HelpButton onClick={toggleWebPageHelp}>
+                <HelpIcon />
+              </HelpButton>
+              {/* Web page help popup */}
               {webPageHelpVisible && (
-              <PopupOverlay onClick={toggleWebPageHelp}>
-                <PopupContent>
-                  <p>En aquest apartat has d'indicar el número de pàgines que vols en el teu projecte</p>
-                </PopupContent>
-              </PopupOverlay>
-            )}
+                <PopupOverlay onClick={toggleWebPageHelp}>
+                  <PopupContent>
+                    <p>En aquest apartat has d'indicar el número de pàgines que vols en el teu projecte</p>
+                  </PopupContent>
+                </PopupOverlay>
+              )}
             </InputLabel>
-            
 
             <InputLabel>
               Nombre d'idiomes
@@ -204,15 +268,18 @@ function BudgetScreen(): JSX.Element {
                 }
                 onChange={(value) => handleWebPageDataChange('numLanguages', value)}
               />
-              <HelpButton onClick={toggleLanguageHelp}><HelpIcon/></HelpButton>
+              <HelpButton onClick={toggleLanguageHelp}>
+                <HelpIcon />
+              </HelpButton>
+              {/* Language help popup */}
+              {languageHelpVisible && (
+                <PopupOverlay onClick={toggleLanguageHelp}>
+                  <PopupContent>
+                    <p>En aquest apartat has d'indicar el número d'idiomes que vols en el teu projecte</p>
+                  </PopupContent>
+                </PopupOverlay>
+              )}
             </InputLabel>
-            {languageHelpVisible && (
-              <PopupOverlay onClick={toggleLanguageHelp}>
-                <PopupContent>
-                  <p>En aquest apartat has d'indicar el número d'idiomes que vols en el teu projecte</p>
-                </PopupContent>
-              </PopupOverlay>
-            )}
           </InputContainer>
         </div>
       )}
@@ -238,8 +305,35 @@ function BudgetScreen(): JSX.Element {
       </CheckboxLabel>
       <br />
       <Budget>Pressupost total: {totalBudget} €</Budget>
+      {/* Budget list */}
+      <InputLabel>
+        Nom del pressupost:
+        <input type="text" value={budgetName} onChange={(e) => setBudgetName(e.target.value)} />
+      </InputLabel>
+      <InputLabel>
+        Nom del client:
+        <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} />
+      </InputLabel>
+      <button onClick={addBudgetToList}>Afegir Pressupost</button>
+      </LeftColumn>
+
+      <RightColumn>
+      <BudgetList>
+        <h2>Llistat de Pressupostos</h2>
+        {budgetList.map((budget, index) => (
+          <div key={index}>
+            <p>Nom de pressupost: {budget.budgetName}</p>
+            <p>Nom del client: {budget.clientName}</p>
+            <p>Servei seleccionat: {budget.service}</p>
+            <p>Pressupost total: {budget.totalBudget} €</p>
+            <p>Data: {budget.date}</p>
+            <hr />
+          </div>
+        ))}
+      </BudgetList>
+      </RightColumn>
     </Container>
   );
-}
+};
 
 export default BudgetScreen;
